@@ -415,6 +415,8 @@ a.inv-roster-li{pointer-events:all}
 .quiz-option:hover{border-color:var(--terracotta);color:var(--terracotta);background:var(--terracotta-bg)}
 .quiz-option.selected{border-color:var(--terracotta);background:var(--terracotta);color:#fff}
 .quiz-option .opt-label{font-size:.63rem;letter-spacing:.12em;text-transform:uppercase;opacity:.7;display:block;margin-bottom:.25rem}
+.quiz-select{width:100%;border:1.5px solid var(--border);background:var(--white);padding:.9rem 1rem;font-family:'Inter',sans-serif;font-size:.9rem;color:var(--heading);outline:none;transition:border-color .25s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A04732' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1rem center;cursor:pointer}
+.quiz-select:focus{border-color:var(--terracotta)}
 
 .quiz-nav{display:flex;justify-content:space-between;align-items:center;padding:1.5rem 2.5rem;border-top:1px solid var(--border)}
 .quiz-back{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);display:flex;align-items:center;gap:.4rem;transition:color .2s;background:none;border:none;cursor:pointer}
@@ -612,6 +614,8 @@ footer{background:var(--green);border-top:none;padding:4.5rem 3rem 2.5rem;margin
   .quiz-step{padding:1.5rem 1.2rem}
   .quiz-step-q{font-size:1.15rem;margin-bottom:.3rem}
   .quiz-step-hint{font-size:.78rem;margin-bottom:1.2rem}
+  .quiz-q1-desktop{display:none !important}
+  .quiz-q1-mobile{display:block !important}
   .quiz-options{grid-template-columns:1fr !important;gap:.6rem}
   .quiz-option{padding:.85rem 1rem;font-size:.83rem}
   .quiz-option .opt-label{font-size:.58rem}
@@ -1024,7 +1028,8 @@ footer{background:var(--green);border-top:none;padding:4.5rem 3rem 2.5rem;margin
       <div class="quiz-step active" data-step="1">
         <h3 class="quiz-step-q">¿En qué industria opera tu empresa?</h3>
         <p class="quiz-step-hint">Selecciona la opción que mejor describe el sector principal de tu negocio.</p>
-        <div class="quiz-options" style="grid-template-columns:1fr 1fr 1fr">
+        <!-- Desktop: botones -->
+        <div class="quiz-options quiz-q1-desktop" style="grid-template-columns:1fr 1fr 1fr">
           <button class="quiz-option" data-value="5" data-industry="Manufactura / Industria"><span class="opt-label">Sector</span>Manufactura / Industria</button>
           <button class="quiz-option" data-value="5" data-industry="Servicios Empresariales (B2B)"><span class="opt-label">Sector</span>Servicios Empresariales (B2B)</button>
           <button class="quiz-option" data-value="5" data-industry="Distribución / Logística"><span class="opt-label">Sector</span>Distribución / Logística</button>
@@ -1034,6 +1039,21 @@ footer{background:var(--green);border-top:none;padding:4.5rem 3rem 2.5rem;margin
           <button class="quiz-option" data-value="0" data-industry="Retail / Consumo"><span class="opt-label">Sector</span>Retail / Consumo</button>
           <button class="quiz-option" data-value="0" data-industry="Construcción / Inmobiliario"><span class="opt-label">Sector</span>Construcción / Inmobiliario</button>
           <button class="quiz-option" data-value="5" data-industry="Otra" id="otherIndustryBtn"><span class="opt-label">Sector</span>Otra industria</button>
+        </div>
+        <!-- Mobile: dropdown -->
+        <div class="quiz-q1-mobile" style="display:none">
+          <select id="q1MobileSelect" class="quiz-select">
+            <option value="" disabled selected>Selecciona una industria...</option>
+            <option value="5" data-industry="Manufactura / Industria">Manufactura / Industria</option>
+            <option value="5" data-industry="Servicios Empresariales (B2B)">Servicios Empresariales (B2B)</option>
+            <option value="5" data-industry="Distribución / Logística">Distribución / Logística</option>
+            <option value="5" data-industry="Salud y Servicios Médicos">Salud y Servicios Médicos</option>
+            <option value="5" data-industry="Educación">Educación</option>
+            <option value="5" data-industry="Tecnología / Software">Tecnología / Software</option>
+            <option value="0" data-industry="Retail / Consumo">Retail / Consumo</option>
+            <option value="0" data-industry="Construcción / Inmobiliario">Construcción / Inmobiliario</option>
+            <option value="5" data-industry="Otra">Otra industria</option>
+          </select>
         </div>
         <div id="otherIndustryWrap" style="display:none;margin-top:1rem">
           <input type="text" id="otherIndustryInput" placeholder="Escribe tu industria" style="border:1.5px solid var(--border);background:var(--white);padding:.75rem 1rem;font-family:'Inter',sans-serif;font-size:.9rem;color:var(--heading);outline:none;transition:border-color .25s;width:100%" onfocus="this.style.borderColor='var(--terracotta)'" onblur="this.style.borderColor='var(--border)'"/>
@@ -1765,6 +1785,24 @@ document.querySelectorAll('.quiz-option').forEach(btn => {
   });
 });
 
+// Mobile Q1 select handler
+document.getElementById('q1MobileSelect').addEventListener('change', function() {
+  var opt = this.options[this.selectedIndex];
+  var val = parseFloat(opt.value);
+  var industry = opt.dataset.industry;
+  scores['1'] = val;
+  answerTexts['1'] = industry;
+  selectedIndustry = industry;
+  var otherWrap = document.getElementById('otherIndustryWrap');
+  if (industry === 'Otra') {
+    otherWrap.style.display = 'block';
+    document.getElementById('otherIndustryInput').focus();
+  } else {
+    otherWrap.style.display = 'none';
+  }
+  document.getElementById('quizNext').classList.add('enabled');
+});
+
 function quizNext() {
   if (!document.getElementById('quizNext').classList.contains('enabled')) return;
   // Si está en Q1 y eligió "Otra", guardar el texto del input
@@ -1903,6 +1941,8 @@ function resetQuiz() {
   for (let k in answerTexts) delete answerTexts[k];
   selectedIndustry = '';
   document.querySelectorAll('.quiz-option').forEach(b => b.classList.remove('selected'));
+  document.getElementById('q1MobileSelect').selectedIndex = 0;
+  document.getElementById('otherIndustryWrap').style.display = 'none';
   document.getElementById('quizResult').classList.remove('active');
   document.getElementById('quizNav').style.display = 'flex';
   document.getElementById('resultRing').style.strokeDashoffset = '283';
