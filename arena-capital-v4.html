@@ -1585,7 +1585,6 @@ footer{background:var(--green);border-top:none;padding:4.5rem 3rem 2.5rem;margin
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
   /* ── EMAILJS CONFIGURACIÓN ──────────────────────────────────────────────
      1. Crea cuenta gratuita en https://www.emailjs.com  (200 emails/mes)
@@ -1593,16 +1592,21 @@ footer{background:var(--green);border-top:none;padding:4.5rem 3rem 2.5rem;margin
      3. Crea un "Email Template" con las variables listadas abajo
      4. Reemplaza los tres valores de abajo con los tuyos
   ──────────────────────────────────────────────────────────────────────── */
-  const EMAILJS_PUBLIC_KEY  = 'TU_PUBLIC_KEY';   // Account → API Keys
-  const EMAILJS_SERVICE_ID  = 'TU_SERVICE_ID';   // Email Services → Service ID
-  const EMAILJS_TEMPLATE_ID = 'TU_TEMPLATE_ID';  // Email Templates → Template ID
-  /* Variables disponibles en el template EmailJS:
-     {{nombre}}  {{empresa}}  {{email}}  {{telefono}}
-     {{industria}}  {{score}}  {{nivel}}
-     {{r_q2}}  {{r_q3}}  {{r_q4}}  {{r_q5}}  {{r_q6}}
-     {{fecha}}
-  */
-  (function(){ if(typeof emailjs !== 'undefined') emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); })();
+  /* ── GOOGLE SHEETS + EMAIL NOTIFICATIONS ── */
+  const GSHEET_URL = 'https://script.google.com/macros/s/AKfycbyBLoNYZG2O2zwsovAXEj7QztNd_lPsEcjguulwC3aC3mg0smyOJfjhc-ucZ4AujPzSOA/exec';
+
+  function sendToSheet(data) {
+    fetch(GSHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(function() {
+      console.log('[Arena Capital] Datos enviados a Google Sheets');
+    }).catch(function(err) {
+      console.warn('[Arena Capital] Error al enviar a Sheets:', err);
+    });
+  }
 </script>
 <script>
 /* ══════════════════════════════════════════════
@@ -1834,7 +1838,7 @@ function showResult() {
   } else {
     level = 'En Construcción';
     title = 'Tu empresa está en etapa de desarrollo.';
-    desc = 'Tu empresa está en etapa de desarrollo. Podemos orientarte sobre los pasos a seguir para llegar al perfil ideal y maximizar el valor de tu negocio.';
+    desc = 'Te invitamos a descargar nuestra guía gratuita para conocer los criterios que evaluamos y cómo preparar tu empresa para una futura transacción.';
     ringColor = '#595959';
   }
 
@@ -1855,42 +1859,20 @@ function showResult() {
   document.getElementById('quizResult').classList.add('active');
   document.getElementById('quizResult').scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-  // Store data
-  const data = {
-    nombre: document.getElementById('q-nombre').value,
-    empresa: document.getElementById('q-empresa').value,
-    email: document.getElementById('q-email').value,
-    tel: document.getElementById('q-tel').value,
-    industria: selectedIndustry,
-    score: pct,
-    level: level,
-    date: new Date().toISOString()
-  };
-  localStorage.setItem('ac_quiz_v3', JSON.stringify(data));
-  console.log('[Arena Capital] Cuestionario:', data);
-
-  // Enviar por correo via EmailJS
-  if (typeof emailjs !== 'undefined' && EMAILJS_SERVICE_ID !== 'TU_SERVICE_ID') {
-    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      nombre:   data.nombre   || '(no proporcionado)',
-      empresa:  data.empresa  || '(no proporcionado)',
-      email:    data.email    || '(no proporcionado)',
-      telefono: data.tel      || '(no proporcionado)',
-      industria: selectedIndustry || '(no seleccionada)',
-      score:    pct + '%',
-      nivel:    level,
-      r_q2:     answerTexts['2'] || '—',
-      r_q3:     answerTexts['3'] || '—',
-      r_q4:     answerTexts['4'] || '—',
-      r_q5:     answerTexts['5'] || '—',
-      r_q6:     answerTexts['6'] || '—',
-      fecha:    new Date().toLocaleDateString('es-MX', { year:'numeric', month:'long', day:'numeric' })
-    }).then(() => {
-      console.log('[Arena Capital] Email enviado correctamente.');
-    }).catch(err => {
-      console.warn('[Arena Capital] Error al enviar email:', err);
-    });
-  }
+  // Enviar a Google Sheets + email
+  const respuestas = ['Q2: ' + (answerTexts['2']||'—'), 'Q3: ' + (answerTexts['3']||'—'), 'Q4: ' + (answerTexts['4']||'—'), 'Q5: ' + (answerTexts['5']||'—'), 'Q6: ' + (answerTexts['6']||'—')].join(' | ');
+  sendToSheet({
+    fecha: new Date().toLocaleDateString('es-MX', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' }),
+    fuente: 'Cuestionario',
+    nombre: document.getElementById('q-nombre').value.trim(),
+    empresa: document.getElementById('q-empresa').value.trim(),
+    email: document.getElementById('q-email').value.trim(),
+    telefono: document.getElementById('q-tel').value.trim() || 'No proporcionado',
+    industria: selectedIndustry || 'No seleccionada',
+    score: pct + '%',
+    nivel: level,
+    respuestas: respuestas
+  });
 }
 
 function resetQuiz() {
@@ -2197,28 +2179,19 @@ function downloadGuia() {
   const em = document.getElementById('mem').value.trim();
   const t  = document.getElementById('mt').value.trim();
   if (!n || !em) { alert('Por favor ingresa tu nombre y correo electrónico.'); return; }
-  const lead = { nombre: n, empresa: e, email: em, tel: t, date: new Date().toISOString() };
-  localStorage.setItem('ac_guia_v4', JSON.stringify(lead));
-  console.log('[Arena Capital] Guía descargada:', lead);
-
-  // Enviar lead por EmailJS si está configurado
-  if (typeof emailjs !== 'undefined' && EMAILJS_SERVICE_ID !== 'TU_SERVICE_ID') {
-    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      nombre:   n || '(no proporcionado)',
-      empresa:  e || '(no proporcionado)',
-      email:    em || '(no proporcionado)',
-      telefono: t || '(no proporcionado)',
-      industria: 'Descarga de Guía',
-      score:    '—',
-      nivel:    'Descarga de Guía',
-      r_q2: '—', r_q3: '—', r_q4: '—', r_q5: '—', r_q6: '—',
-      fecha: new Date().toLocaleDateString('es-MX', { year:'numeric', month:'long', day:'numeric' })
-    }).then(() => {
-      console.log('[Arena Capital] Lead de guía enviado por email.');
-    }).catch(err => {
-      console.warn('[Arena Capital] Error al enviar lead:', err);
-    });
-  }
+  // Enviar a Google Sheets + email
+  sendToSheet({
+    fecha: new Date().toLocaleDateString('es-MX', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' }),
+    fuente: 'Descarga Guía',
+    nombre: n,
+    empresa: e,
+    email: em,
+    telefono: t || 'No proporcionado',
+    industria: 'N/A',
+    score: 'N/A',
+    nivel: 'N/A',
+    respuestas: 'N/A'
+  });
 
   closeModal();
 
