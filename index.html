@@ -118,13 +118,22 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .nav-ham.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
 
 /* Mobile menu */
-.mob-menu{display:none;position:fixed;inset:0;background:var(--white);z-index:199;flex-direction:column;justify-content:center;align-items:center;gap:1.4rem;padding:2rem;overflow-y:auto}
+.mob-menu{display:none;position:fixed;inset:0;background:var(--sand);z-index:199;flex-direction:column;justify-content:flex-start;align-items:stretch;padding:5rem 2.5rem 2.5rem;overflow-y:auto}
 .mob-menu.open{display:flex}
-.mob-menu a{font-family:'Playfair Display',serif;font-size:clamp(1.3rem,4vw,1.8rem);color:var(--heading);transition:color .2s}
-.mob-menu a:hover{color:var(--terracotta)}
-.mob-menu .mob-sub{display:flex;flex-direction:column;align-items:center;gap:.6rem;margin-top:-.3rem}
-.mob-menu .mob-sub a{font-family:'Inter',sans-serif;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gray)}
-.mob-close{position:absolute;top:1.5rem;right:1.5rem;font-size:2rem;color:var(--gray);cursor:pointer;background:none;border:none}
+.mob-menu a,.mob-menu .mob-acerca{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--heading);transition:color .2s;display:block;padding:.9rem 0;border-bottom:1px solid var(--border);text-decoration:none}
+.mob-menu a:last-of-type{border-bottom:none}
+.mob-menu a:active{color:var(--terracotta)}
+.mob-menu .mob-acerca{cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+.mob-menu .mob-acerca .mob-caret{font-size:.7rem;color:var(--terracotta);transition:transform .3s}
+.mob-menu .mob-acerca.open .mob-caret{transform:rotate(180deg)}
+.mob-menu .mob-sub{max-height:0;overflow:hidden;transition:max-height .35s ease;display:flex;flex-direction:column;padding-left:1.2rem}
+.mob-menu .mob-acerca.open+.mob-sub{max-height:200px}
+.mob-menu .mob-sub a{font-family:'Inter',sans-serif;font-size:.82rem;letter-spacing:.06em;color:var(--gray);padding:.65rem 0;border-bottom:1px solid rgba(0,0,0,.06)}
+.mob-menu .mob-sub a:last-child{border-bottom:1px solid var(--border)}
+.mob-menu .mob-cta{margin-top:auto;padding-top:1.5rem}
+.mob-menu .mob-cta a{border-bottom:none;text-align:center;font-family:'Inter',sans-serif;font-size:.73rem}
+.mob-close{position:absolute;top:1.5rem;right:1.5rem;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--gray);font-size:1.6rem;cursor:pointer;background:none;border:1px solid var(--border);transition:border-color .2s,color .2s}
+.mob-close:active{border-color:var(--terracotta);color:var(--terracotta)}
 
 /* ══════════════════════════════════════════════
    HERO
@@ -816,15 +825,17 @@ footer{background:var(--green);border-top:none;padding:4.5rem 3rem 2.5rem;margin
   <a href="#nosotros" onclick="closeMenu()">Quiénes Somos</a>
   <a href="#proceso" onclick="closeMenu()">Proceso</a>
   <a href="#quiz" onclick="closeMenu()">Cuestionario</a>
-  <span style="font-family:'Playfair Display',serif;font-size:clamp(1.3rem,4vw,1.8rem);color:var(--heading)">Acerca De</span>
+  <div class="mob-acerca" onclick="this.classList.toggle('open')">Acerca De <span class="mob-caret">▾</span></div>
   <div class="mob-sub">
-    <a href="#eduardo" onclick="closeMenu()">Eduardo</a>
+    <a href="#eduardo" onclick="closeMenu()">Eduardo Correa</a>
     <a href="#inversores-individuales" onclick="closeMenu()">Inversionistas Individuales</a>
     <a href="#inversores-fondos" onclick="closeMenu()">Fondos Institucionales</a>
   </div>
   <a href="#checklist" onclick="closeMenu()">Guía</a>
   <a href="#faq" onclick="closeMenu()">FAQ</a>
-  <a href="https://cal.com/arenacapital/20min" target="_blank" onclick="closeMenu()" class="btn-green" style="margin-top:.5rem">Agendar Llamada</a>
+  <div class="mob-cta">
+    <a href="https://cal.com/arenacapital/20min" target="_blank" onclick="closeMenu()" class="btn-green" style="justify-content:center">Agendar Llamada</a>
+  </div>
 </div>
 
 <!-- ═══ NAVBAR ═══ -->
@@ -1651,6 +1662,8 @@ function toggleMenu() {
 function closeMenu() {
   document.getElementById('mobMenu').classList.remove('open');
   document.getElementById('hamBtn').classList.remove('open');
+  var acerca = document.querySelector('.mob-acerca');
+  if (acerca) acerca.classList.remove('open');
   document.body.style.overflow = '';
 }
 function setInvOpt(n, btn) {
