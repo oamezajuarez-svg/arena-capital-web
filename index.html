@@ -1862,7 +1862,7 @@ function validateContactFields() {
     var hint = document.getElementById('q-email-hint');
     if (hint) hint.remove();
   }
-  if (nombre && empresa && email && isBusinessEmail(email)) {
+  if (nombre.length >= 3 && empresa.length >= 3 && email && isBusinessEmail(email)) {
     nextBtn.classList.add('enabled');
   } else {
     nextBtn.classList.remove('enabled');
@@ -1875,6 +1875,15 @@ function validateContactFields() {
 });
 
 function showResult() {
+  // Validación de seguridad antes de calcular
+  var qNombre = document.getElementById('q-nombre').value.trim();
+  var qEmpresa = document.getElementById('q-empresa').value.trim();
+  var qEmail = document.getElementById('q-email').value.trim();
+  if (qNombre.length < 3 || qEmpresa.length < 3 || !isBusinessEmail(qEmail)) {
+    alert('Por favor completa todos los campos con información válida y un correo corporativo.');
+    return;
+  }
+
   // Ponderación: Q1-Q5 pesan 18% (0.18), Q6 pesa 10% (0.10)
   const weights = { '1': 0.18, '2': 0.18, '3': 0.18, '4': 0.18, '5': 0.18, '6': 0.10 };
   const maxValues = { '1': 5, '2': 5, '3': 5, '4': 5, '5': 5, '6': 5 };
@@ -2253,7 +2262,7 @@ function downloadGuia() {
   const e  = document.getElementById('me').value.trim();
   const em = document.getElementById('mem').value.trim();
   const t  = document.getElementById('mt').value.trim();
-  if (!n || !em) { alert('Por favor ingresa tu nombre y correo electrónico.'); return; }
+  if (!n || n.length < 3 || !em) { alert('Por favor ingresa tu nombre completo y correo electrónico.'); return; }
   if (!isBusinessEmail(em)) { alert('Por favor ingresa tu correo corporativo (no se aceptan correos personales como Gmail, Hotmail, etc.)'); return; }
   // Enviar a Google Sheets + email
   sendToSheet({
