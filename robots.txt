@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /Documentos/
+
+Sitemap: https://arenacap.mx/sitemap.xml
